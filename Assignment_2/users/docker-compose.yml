@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  users:
+    build: .
+    image: users:latest
+    ports:
+      - "8080:8080"

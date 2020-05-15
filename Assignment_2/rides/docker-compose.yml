@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  rides:
+    build: .
+    image: rides:latest
+    ports:
+      - "8000:8000"

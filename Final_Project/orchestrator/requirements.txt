@@ -1,0 +1,8 @@
+requests
+pandas
+datetime
+flask
+flask-cors
+pika
+docker
+kazoo

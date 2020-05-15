@@ -1,0 +1,59 @@
+version: '3.1'
+
+services:
+  zoo:
+    image: zookeeper
+    container_name: zoo
+    restart: on-failure
+    hostname: zoo
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181
+
+  rmq:
+    container_name: rmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    image: rabbitmq:3-management
+    restart: on-failure
+
+
+  orc:
+    container_name: orc
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orc:latest
+    ports:
+      - 8080:8080
+    command: sh -c "sleep 15 && export FLASK_APP=orchestrator.py && export FLASK_RUN_PORT=8080 && flask run --host=0.0.0.0"
+    links:
+      - rmq
+      - zoo
+    depends_on:
+      - rmq
+      - zoo
+    volumes:
+      - .:/code
+    restart: on-failure 
+
+  slave:
+    container_name: slave
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: slave:latest
+    # command: sh -c "sleep 15 && python3 slave.py"
+    links:
+      - rmq
+      - zoo
+    depends_on:
+      - rmq
+      - zoo
+    volumes:
+      - .:/code
+    #restart: on-failure 
+

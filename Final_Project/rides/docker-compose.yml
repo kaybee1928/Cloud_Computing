@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  rides:
+    container_name: rides
+    build: .
+    image: rides:latest
+    ports:
+      - "8080:8080"
