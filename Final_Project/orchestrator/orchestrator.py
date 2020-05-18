@@ -263,6 +263,7 @@ def slavePatrols(ev):
     firstElection = 3
     timer = threading.Thread(target=firstElectionTimer, args=())
     timer.start()
+    children = getOnlyInt(zk.get_children("/slave", watch=slavePatrols))
     return slave.id
     
     
@@ -445,6 +446,7 @@ def crash_slave():
         time.sleep(3)
         rr =  requests.post(url = 'http://0.0.0.0:8080/api/v1/crash/slave')
         return rr.json(),rr.status_code
+    children = getOnlyInt(zk.get_children("/slave", watch=slavePatrols))
     return jsonify({'pid':int(pid)}),200
 
 

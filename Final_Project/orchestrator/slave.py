@@ -583,6 +583,7 @@ def receiveSignal(signalNumber, frame):
         zk.create('/master/'+ str(pid), this.id.encode())
         lol.slave_to_master()
         signal.signal(signal.SIGTERM, receiveSignal2)
+        signal.signal(signal.SIGQUIT, receiveSignal2)
         zk.delete('/slave/'+str(pid))
         time.sleep(1)
         return
