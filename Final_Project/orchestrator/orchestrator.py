@@ -96,6 +96,45 @@ def deleteUnwantedWorker():
 
 
 
+def sigkillToWorker():
+    """
+        if someone sents sigkill and it goes to zero
+    """
+    while True:
+        m = zk.get_children("/master")
+        s = zk.get_children("/slave")
+        for i in s:
+            cid = zk.get("/slave/"+i)[0].decode()
+            sl = client.containers.get(cid)
+            if(sl.attrs['State']['Status'] == 'running'):
+                pass
+            else:
+                zk.delete("/slave/"+i)
+
+        for i in m:
+            cid = zk.get("/master/"+i)[0].decode()
+            sl = client.containers.get(cid)
+            if(sl.attrs['State']['Status'] == 'running'):
+                pass
+            else:
+                zk.delete("/master/"+i)
+
+        m = zk.get_children("/master")
+        s = zk.get_children("/slave")
+
+        if(len(s) < 1):
+            slavePatrols(1)
+
+        if(len(m) < 1):
+            masterElection(1)
+
+        time.sleep(1.5)
+
+
+
+
+
+
 def getResponseW():
     """
         Reads the response for write request from responsewQ.
@@ -503,6 +542,8 @@ def init_sm():
     resp.start()
     respW = threading.Thread(target=getResponseW, args=())
     respW.start()
+    sktow = threading.Thread(target=sigkillToWorker, args=())
+    sktow.start()
     return True
 
 
