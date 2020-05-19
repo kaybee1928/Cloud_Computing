@@ -606,7 +606,7 @@ def receiveSignal3(signalNumber, frame):
 
     
 
-def exitfunc():
+def exitfunc(signalNumber, frame):
     """
         If any other error occurs,
         Run functions so that node is deleted before 
@@ -636,7 +636,21 @@ if __name__ == '__main__':
     signal.signal(signal.SIGQUIT, receiveSignal3)
 
     # Handling any occurence of error
-    atexit.register(exitfunc)
+    atexit.register(exitfunc,1,2)
+
+    # Any other signals
+    signal.signal(signal.SIGHUP, exitfunc)
+    signal.signal(signal.SIGINT, exitfunc)
+    signal.signal(signal.SIGILL, exitfunc)
+    signal.signal(signal.SIGTRAP, exitfunc)
+    signal.signal(signal.SIGABRT, exitfunc)
+    signal.signal(signal.SIGBUS, exitfunc)
+    signal.signal(signal.SIGFPE, exitfunc)
+    signal.signal(signal.SIGUSR1, exitfunc)
+    signal.signal(signal.SIGSEGV, exitfunc)
+    signal.signal(signal.SIGUSR2, exitfunc)
+    signal.signal(signal.SIGPIPE, exitfunc)
+    signal.signal(signal.SIGALRM, exitfunc)
 
     # Run the slave
     lol.run()

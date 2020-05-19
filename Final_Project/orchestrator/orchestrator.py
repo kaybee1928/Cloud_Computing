@@ -98,9 +98,15 @@ def deleteUnwantedWorker():
 
 def sigkillToWorker():
     """
-        if someone sents sigkill and it goes to zero
+        if os stops the worker and it goes to zero
+        this func brings up new workers
     """
     while True:
+        time.sleep(1)
+        global globalLock
+        while (globalLock == False):
+            pass
+        globalLock = False
         m = zk.get_children("/master")
         s = zk.get_children("/slave")
         for i in s:
@@ -118,17 +124,15 @@ def sigkillToWorker():
                 pass
             else:
                 zk.delete("/master/"+i)
+        time.sleep(0.5)
 
         m = zk.get_children("/master")
-        s = zk.get_children("/slave")
-
-        if(len(s) < 1):
-            slavePatrols(1)
-
+        time.sleep(0.5)
         if(len(m) < 1):
             masterElection(1)
-
-        time.sleep(1.5)
+        ReadIsToSlave2()
+        globalLock = True
+        time.sleep(1)
 
 
 
@@ -248,6 +252,29 @@ def ReadIsToSlave():
     globalreadLock = True
 
 
+def ReadIsToSlave2():
+    """
+        Performs up scaling if required condition is met
+        Takes a read lock on all slaves and performs up scale.
+        When lock is acquired master election and scale down cannot
+        be performed. This is without incrementing count
+    """
+    global globalreadLock
+    while(globalreadLock == False):
+        pass
+    globalreadLock = False
+    fff = open("counter.txt", "r")
+    count = int(fff.readline())
+    fff.close()
+    slaves_pid = getOnlyInt(zk.get_children("/slave"))
+    cc = int((count-1) / 20) + 1 - len(slaves_pid)
+    while(cc>0):
+        slavePatrols(1)
+        time.sleep(3)
+        cc = cc - 1
+    globalreadLock = True
+
+
 
 def getOnlyInt(arr):
     """
@@ -302,7 +329,6 @@ def slavePatrols(ev):
     firstElection = 3
     timer = threading.Thread(target=firstElectionTimer, args=())
     timer.start()
-    children = getOnlyInt(zk.get_children("/slave", watch=slavePatrols))
     return slave.id
     
     
@@ -485,7 +511,7 @@ def crash_slave():
         time.sleep(3)
         rr =  requests.post(url = 'http://0.0.0.0:8080/api/v1/crash/slave')
         return rr.json(),rr.status_code
-    children = getOnlyInt(zk.get_children("/slave", watch=slavePatrols))
+    
     return jsonify({'pid':int(pid)}),200
 
 
