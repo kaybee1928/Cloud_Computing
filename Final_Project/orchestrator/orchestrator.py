@@ -127,10 +127,12 @@ def sigkillToWorker():
         time.sleep(0.5)
 
         m = zk.get_children("/master")
+        ReadIsToSlave2()
+
         time.sleep(0.5)
         if(len(m) < 1):
             masterElection(1)
-        ReadIsToSlave2()
+        
         globalLock = True
         time.sleep(1)
 
@@ -267,6 +269,15 @@ def ReadIsToSlave2():
     count = int(fff.readline())
     fff.close()
     slaves_pid = getOnlyInt(zk.get_children("/slave"))
+    if len(slaves_pid) == 0:
+        globalreadLock = True
+        global firstElection
+        time.sleep(2)
+        time.sleep(firstElection)
+        while(globalreadLock == False):
+            pass
+        globalreadLock = False
+        slaves_pid = getOnlyInt(zk.get_children("/slave"))
     cc = int((count-1) / 20) + 1 - len(slaves_pid)
     while(cc>0):
         slavePatrols(1)
@@ -536,6 +547,8 @@ def crash_master():
         master.exec_run(["kill","1"])
         while(master.attrs['State']['Status'] == 'running'):
             master = client.containers.get(cont_id)
+        while(len(zk.get_children('/slave/')) == 0):
+            pass
         globalLock = True
     except:
         globalLock = True
